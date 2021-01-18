@@ -124,9 +124,8 @@ public class MyServer {
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(recipient)) {
                 client.sendMessage(command);
+                break;
             }
-
-            break;
         }
     }
 }
