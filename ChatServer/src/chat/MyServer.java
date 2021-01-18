@@ -125,7 +125,7 @@ public class MyServer {
             if (client.getUsername().equals(recipient)) {
                 client.sendMessage(command);
             }
-            
+
             break;
         }
     }
