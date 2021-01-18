@@ -3,13 +3,26 @@ package chat.handler;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class DBHandler {
+public class DBHandler implements AutoCloseable {
 
-    private final Connection connection;
+    private static DBHandler instance;
+    private static Connection connection;
 
-    public DBHandler() throws ClassNotFoundException, SQLException {
-        Class.forName("org.sqlite.JDBC");
-        this.connection = DriverManager.getConnection("jdbc:sqlite:ChatServer/ChatDB.db");
+    public static DBHandler getInstance() {
+        if (instance == null) {
+            loadDriverAndOpenConnection();
+            instance = new DBHandler();
+        }
+        return instance;
+    }
+
+    private static void loadDriverAndOpenConnection() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:ChatServer/ChatDB.db");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public ArrayList<String> getUsersList() {
@@ -54,7 +67,8 @@ public class DBHandler {
         }
     }
 
-    public void stopHandler() {
+    @Override
+    public void close() throws Exception {
         try {
             connection.close();
         } catch (SQLException e) {

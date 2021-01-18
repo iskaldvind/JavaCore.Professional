@@ -16,7 +16,7 @@ public class ServerApp {
 
         try {
             new MyServer(port).start();
-        } catch (IOException | SQLException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Ошибка!");
             System.exit(1);

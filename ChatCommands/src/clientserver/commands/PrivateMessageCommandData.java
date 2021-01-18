@@ -1,13 +1,15 @@
 package clientserver.commands;
 
+import clientserver.Message;
+
 import java.io.Serializable;
 
 public class PrivateMessageCommandData implements Serializable {
 
     private final String receiver;
-    private final String message;
+    private final Message message;
 
-    public PrivateMessageCommandData(String receiver, String message) {
+    public PrivateMessageCommandData(String receiver, Message message) {
         this.receiver = receiver;
         this.message = message;
     }
@@ -16,7 +18,7 @@ public class PrivateMessageCommandData implements Serializable {
         return receiver;
     }
 
-    public String getMessage() {
+    public Message getMessage() {
         return message;
     }
 }

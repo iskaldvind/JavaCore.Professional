@@ -4,16 +4,14 @@ import chat.MyServer;
 import chat.auth.AuthService;
 import clientserver.Command;
 import clientserver.CommandType;
-import clientserver.commands.AuthCommandData;
-import clientserver.commands.PrivateMessageCommandData;
-import clientserver.commands.PublicMessageCommandData;
-import clientserver.commands.UpdateUserCommandData;
+import clientserver.Message;
+import clientserver.commands.*;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.Timer;
 
 public class ClientHandler {
@@ -34,7 +32,6 @@ public class ClientHandler {
         in = new ObjectInputStream(clientSocket.getInputStream());
         out = new ObjectOutputStream(clientSocket.getOutputStream());
 
-//        new Timer().schedule();
         new Thread(() -> {
             try {
                 authentication();
@@ -87,12 +84,12 @@ public class ClientHandler {
                 sendMessage(Command.authErrorCommand("Логин уже используется"));
                 return false;
             }
-
-            sendMessage(Command.authOkCommand(username));
-            String message = String.format(">>> %s присоединился к чату", username);
-            myServer.broadcastMessage(this, Command.messageInfoCommand(message, null));
-            myServer.subscribe(this);
             this.login = login;
+            sendMessage(Command.authOkCommand(username));
+            myServer.subscribe(this);
+            String text = String.format("%s присоединился к чату", username);
+            Message message = new Message("Server", text);
+            myServer.broadcastMessage(null, Command.messageInfoCommand(message, null));
             return true;
         } else {
             sendMessage(Command.authErrorCommand("Логин или пароль не соответствуют действительности"));
@@ -125,7 +122,7 @@ public class ClientHandler {
                 }
                 case PUBLIC_MESSAGE: {
                     PublicMessageCommandData data = (PublicMessageCommandData) command.getData();
-                    String message = data.getMessage();
+                    Message message = data.getMessage();
                     String sender = data.getSender();
                     myServer.broadcastMessage(this, Command.messageInfoCommand(message, sender));
                     break;
@@ -133,8 +130,8 @@ public class ClientHandler {
                 case PRIVATE_MESSAGE: {
                     PrivateMessageCommandData data = (PrivateMessageCommandData) command.getData();
                     String recipient = data.getReceiver();
-                    String message = data.getMessage();
-                    myServer.sendPrivateMessage(recipient, Command.messageInfoCommand(message, username));
+                    Message message = data.getMessage();
+                    myServer.sendPrivateMessage(recipient, this, Command.messageInfoCommand(message, username));
                     break;
                 }
                 case UPDATE_USER: {
@@ -170,8 +167,9 @@ public class ClientHandler {
     }
 
     private void unsubscribe() throws IOException {
-        String exitMessage = String.format(">>> %s покинул чат", username);
-        myServer.broadcastMessage(this, Command.messageInfoCommand(exitMessage, null));
+        String text = String.format("%s покинул чат", username);
+        Message message = new Message("Server", text);
+        myServer.broadcastMessage(null, Command.messageInfoCommand(message, null));
         myServer.unSubscribe(this);
     }
 }

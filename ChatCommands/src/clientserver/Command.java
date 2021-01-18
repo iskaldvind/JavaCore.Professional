@@ -25,7 +25,6 @@ public class Command implements Serializable {
         return command;
     }
 
-
     public static Command authOkCommand(String username) {
         Command command = new Command();
         command.type = CommandType.AUTH_OK;
@@ -46,21 +45,21 @@ public class Command implements Serializable {
         return command;
     }
 
-    public static Command messageInfoCommand(String message, String sender) {
+    public static Command messageInfoCommand(Message message, String sender) {
         Command command = new Command();
         command.type = CommandType.INFO_MESSAGE;
         command.data = new MessageInfoCommandData(message, sender);
         return command;
     }
 
-    public static Command publicMessageCommand(String username, String message) {
+    public static Command publicMessageCommand(String username, Message message) {
         Command command = new Command();
         command.type = CommandType.PUBLIC_MESSAGE;
         command.data = new PublicMessageCommandData(username, message);
         return command;
     }
 
-    public static Command privateMessageCommand(String receiver, String message) {
+    public static Command privateMessageCommand(String receiver, Message message) {
         Command command = new Command();
         command.type = CommandType.PRIVATE_MESSAGE;
         command.data = new PrivateMessageCommandData(receiver, message);

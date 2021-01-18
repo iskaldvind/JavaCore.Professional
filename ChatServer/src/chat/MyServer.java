@@ -1,17 +1,15 @@
 package chat;
 
 import chat.auth.AuthService;
-import chat.auth.BaseAuthService;
 import chat.auth.SQLiteAuthService;
 import chat.handler.ClientHandler;
 import chat.handler.DBHandler;
 import clientserver.Command;
-import clientserver.commands.UpdateUserCommandData;
+import clientserver.Message;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,9 +20,9 @@ public class MyServer {
     private final DBHandler dbHandler;
     private final List<ClientHandler> clients = new ArrayList<>();
 
-    public MyServer(int port) throws IOException, SQLException, ClassNotFoundException {
+    public MyServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
-        dbHandler = new DBHandler();
+        dbHandler = DBHandler.getInstance();
         this.authService = new SQLiteAuthService(dbHandler);
         boolean started = this.authService.start();
         if (!started) {
@@ -58,8 +56,9 @@ public class MyServer {
                     client.setUsername(newName);
                     List<String> usernames = getAllUsernames();
                     broadcastMessage(null, Command.updateUsersListCommand(usernames));
-                    String updateMessage = String.format(">>> %s теперь %s", oldName, newName);
-                    broadcastMessage(null, Command.messageInfoCommand(updateMessage, null));
+                    String updateMessage = String.format("%s теперь %s", oldName, newName);
+                    Message message = new Message("Server", updateMessage);
+                    broadcastMessage(null, Command.messageInfoCommand(message, null));
                 } else {
                     client.sendMessage(Command.updateErrorCommand("Не удалось обновить"));
                 }
@@ -71,7 +70,6 @@ public class MyServer {
     private void waitAndProcessNewClientConnection() throws IOException {
         System.out.println("Ожидание пользователя...");
         Socket clientSocket = serverSocket.accept();
-//        clientSocket.setSoTimeout(120000);
         System.out.println("Клиент подключился!");
         processClientConnection(clientSocket);
     }
@@ -116,20 +114,18 @@ public class MyServer {
 
     public synchronized void broadcastMessage(ClientHandler sender, Command command) throws IOException {
         for (ClientHandler client : clients) {
-            if (client == sender) {
-                continue;
+            if (client != sender) {
+                client.sendMessage(command);
             }
-          client.sendMessage(command);
-
         }
     }
 
-    public synchronized void sendPrivateMessage(String recipient, Command command) throws IOException {
+    public synchronized void sendPrivateMessage(String recipient, ClientHandler sender, Command command) throws IOException {
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(recipient)) {
                 client.sendMessage(command);
-                break;
             }
+            break;
         }
     }
 }

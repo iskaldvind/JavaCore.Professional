@@ -69,6 +69,7 @@ public class NetworkClient extends Application {
 
         chatController = loader.getController();
         chatController.setNetwork(network);
+        network.setChatController(chatController);
 
         primaryStage.setOnCloseRequest(windowEvent -> network.close());
     }

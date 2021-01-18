@@ -1,18 +1,20 @@
 package clientserver.commands;
 
+import clientserver.Message;
+
 import java.io.Serializable;
 
 public class MessageInfoCommandData implements Serializable {
 
-    private final String message;
+    private final Message message;
     private final String sender;
 
-    public MessageInfoCommandData(String message, String sender) {
+    public MessageInfoCommandData(Message message, String sender) {
         this.message = message;
         this.sender = sender;
     }
 
-    public String getMessage() {
+    public Message getMessage() {
         return message;
     }
 
