@@ -165,7 +165,7 @@ public class ChatController {
             if (log.length() > 0) {
                 String[] codedMessages = log.split("\n");
                 final int LAST_MESSAGES = 100;
-                for (int i = Math.max(0, codedMessages.length - 1 - LAST_MESSAGES); i < codedMessages.length; i++) {
+                for (int i = Math.max(0, codedMessages.length - LAST_MESSAGES); i < codedMessages.length; i++) {
                     String[] messageParts = codedMessages[i].split("@@@", 4);
                     Message message = new Message(messageParts[2], Long.parseLong(messageParts[0]), messageParts[1], messageParts[3]);
                     appendMessage(message);

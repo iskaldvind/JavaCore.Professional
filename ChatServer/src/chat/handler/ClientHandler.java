@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Timer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
 
@@ -28,11 +30,11 @@ public class ClientHandler {
         this.clientSocket = clientSocket;
     }
 
-    public void handle() throws IOException {
+    public void handle(ExecutorService executorService) throws IOException {
         in = new ObjectInputStream(clientSocket.getInputStream());
         out = new ObjectOutputStream(clientSocket.getOutputStream());
 
-        new Thread(() -> {
+        executorService.submit(() -> {
             try {
                 authentication();
                 readMessage();
@@ -45,8 +47,7 @@ public class ClientHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
-
+        });
     }
 
     private void authentication() throws IOException {
@@ -169,7 +170,7 @@ public class ClientHandler {
     private void unsubscribe() throws IOException {
         String text = String.format("%s покинул чат", username);
         Message message = new Message("Server", text);
-        myServer.broadcastMessage(null, Command.messageInfoCommand(message, null));
         myServer.unSubscribe(this);
+        myServer.broadcastMessage(null, Command.messageInfoCommand(message, null));
     }
 }

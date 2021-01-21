@@ -12,16 +12,20 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MyServer {
 
     private final ServerSocket serverSocket;
     private final AuthService authService;
     private final DBHandler dbHandler;
+    private final ExecutorService executorService;
     private final List<ClientHandler> clients = new ArrayList<>();
 
     public MyServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
+        this.executorService = Executors.newCachedThreadPool();
         dbHandler = DBHandler.getInstance();
         this.authService = new SQLiteAuthService(dbHandler);
         boolean started = this.authService.start();
@@ -43,6 +47,7 @@ public class MyServer {
             e.printStackTrace();
         } finally {
             serverSocket.close();
+            executorService.shutdown();
         }
     }
 
@@ -76,7 +81,7 @@ public class MyServer {
 
     private void processClientConnection(Socket clientSocket) throws IOException {
         ClientHandler clientHandler = new ClientHandler(this, clientSocket);
-        clientHandler.handle();
+        clientHandler.handle(executorService);
     }
 
     public AuthService getAuthService() {
