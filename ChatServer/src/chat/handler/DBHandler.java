@@ -2,11 +2,15 @@ package chat.handler;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DBHandler implements AutoCloseable {
 
     private static DBHandler instance;
     private static Connection connection;
+    private static final Logger logger = Logger.getLogger("DBHandler");
 
     public static DBHandler getInstance() {
         if (instance == null) {
@@ -21,7 +25,7 @@ public class DBHandler implements AutoCloseable {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:ChatServer/ChatDB.db");
         } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -33,7 +37,7 @@ public class DBHandler implements AutoCloseable {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) usersList.add(resultSet.getString("name"));
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
         }
         return usersList;
     }
@@ -48,7 +52,7 @@ public class DBHandler implements AutoCloseable {
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) name = resultSet.getString("name");
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
         }
         return name;
     }
@@ -62,17 +66,17 @@ public class DBHandler implements AutoCloseable {
             int result = statement.executeUpdate();
             return result == 1;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
             return false;
         }
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         try {
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
         }
     }
 }

@@ -11,10 +11,13 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientHandler {
 
@@ -24,6 +27,7 @@ public class ClientHandler {
     private ObjectOutputStream out;
     private String username;
     private String login;
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     public ClientHandler(MyServer myServer, Socket clientSocket) {
         this.myServer = myServer;
@@ -42,10 +46,10 @@ public class ClientHandler {
                 try {
                     unsubscribe();
                 } catch (IOException ee) {
-                    ee.printStackTrace();
+                    logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, Arrays.toString(e.getStackTrace()));
             }
         });
     }
@@ -59,7 +63,13 @@ public class ClientHandler {
                 continue;
             }
             if (command.getType() == CommandType.AUTH) {
-
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("Клиент авторизуется: ");
+                stringBuilder.append(((AuthCommandData) command.getData()).getLogin());
+                stringBuilder.append(" ");
+                stringBuilder.append(((AuthCommandData) command.getData()).getPassword());
+                String logMessage = stringBuilder.toString();
+                logger.log(Level.INFO, logMessage);
                 boolean isSuccessAuth = processAuthCommand(command);
                 if (isSuccessAuth) {
                     break;
@@ -67,7 +77,7 @@ public class ClientHandler {
 
             } else {
                 sendMessage(Command.authErrorCommand("Ошибка авторизации"));
-
+                logger.log(Level.INFO, "Ошибка авторизации клиента");
             }
         }
 
@@ -89,6 +99,7 @@ public class ClientHandler {
             sendMessage(Command.authOkCommand(username));
             myServer.subscribe(this);
             String text = String.format("%s присоединился к чату", username);
+            logger.log(Level.INFO, text);
             Message message = new Message("Server", text);
             myServer.broadcastMessage(null, Command.messageInfoCommand(message, null));
             return true;
@@ -102,9 +113,7 @@ public class ClientHandler {
         try {
             return (Command) in.readObject();
         } catch (ClassNotFoundException e) {
-            String errorMessage = "Получен неизвестный объект";
-            System.err.println(errorMessage);
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Получен неизвестный объект\n" + Arrays.toString(e.getStackTrace()));
             return null;
         }
     }
@@ -118,6 +127,7 @@ public class ClientHandler {
 
             switch (command.getType()) {
                 case END: {
+                    logger.log(Level.INFO, "Клиент " + this.getUsername() + " покинул чат");
                     unsubscribe();
                     return;
                 }
@@ -125,6 +135,13 @@ public class ClientHandler {
                     PublicMessageCommandData data = (PublicMessageCommandData) command.getData();
                     Message message = data.getMessage();
                     String sender = data.getSender();
+                    String logMessage = "Клиент " +
+                            this.getUsername() +
+                            " (всем) " +
+                            message.getDate() +
+                            ": " +
+                            message.getText();
+                    logger.log(Level.INFO, logMessage );
                     myServer.broadcastMessage(this, Command.messageInfoCommand(message, sender));
                     break;
                 }
@@ -132,6 +149,15 @@ public class ClientHandler {
                     PrivateMessageCommandData data = (PrivateMessageCommandData) command.getData();
                     String recipient = data.getReceiver();
                     Message message = data.getMessage();
+                    String logMessage = "Клиент " +
+                            this.getUsername() +
+                            " (" +
+                            recipient +
+                            ") " +
+                            message.getDate() +
+                            ": " +
+                            message.getText();
+                    logger.log(Level.INFO, logMessage );
                     myServer.sendPrivateMessage(recipient, this, Command.messageInfoCommand(message, username));
                     break;
                 }
@@ -144,7 +170,7 @@ public class ClientHandler {
                 }
                 default: {
                     String errorMessage = "Неизвестный тип команды" + command.getType();
-                    System.err.println(errorMessage);
+                    logger.log(Level.SEVERE, "Неизвестный тип команды" + command.getType());
                     sendMessage(Command.errorCommand(errorMessage));
                 }
             }

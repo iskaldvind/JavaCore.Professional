@@ -1,36 +1,51 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
 
-    private final static String MONITOR = "syncLock";
-
-    private static volatile String current = "A";
-    private static final int LOOPS = 5;
-
     public static void main(String[] args) {
 
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        executorService.submit(() -> { printAndSwitch("A", "B"); });
-        executorService.submit(() -> { printAndSwitch("B", "C"); });
-        executorService.submit(() -> { printAndSwitch("C", "A"); });
-        executorService.shutdown();
     }
 
-    private static void printAndSwitch(String waited, String next) {
-        try {
-            for (int i = 0; i < LOOPS; i++) {
-                synchronized (MONITOR) {
-                    while (!current.equals(waited)) {
-                        MONITOR.wait();
-                    }
-                    System.out.print(waited);
-                    current = next;
-                    MONITOR.notifyAll();
-                }
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public Integer[] arrayAfterFour(Integer[] inputArray) throws RuntimeException {
+        if (!checkArrayHasFour(inputArray)) throw new RuntimeException("Array must contain 4");
+        ArrayList<Integer> newArray = new ArrayList<>();
+        for (int i = inputArray.length - 1; i >= 0; i--) {
+            if (inputArray[i] == 4) break;
+            newArray.add(inputArray[i]);
         }
+        Integer[] result = new Integer[newArray.size()];
+        return newArray.toArray(result);
+    }
+
+    private boolean checkArrayHasFour(Integer[] inputArray) {
+        for (int el: inputArray) {
+            if (el == 4) return true;
+        }
+        return false;
+    }
+
+    public boolean checkArrayHasFourAndOne(Integer[] inputArray) {
+        int foundInt = 0;
+        for (int el: inputArray) {
+            if (el == 4) {
+                if (foundInt == 1) {
+                    return true;
+                } else {
+                    foundInt = 4;
+                }
+            } else if (el == 1) {
+                if (foundInt == 4) {
+                    return true;
+                } else {
+                    foundInt = 1;
+                }
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 }

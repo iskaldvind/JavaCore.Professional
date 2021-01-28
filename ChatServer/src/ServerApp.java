@@ -2,10 +2,13 @@ import chat.MyServer;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerApp {
 
     private static final int DEFAULT_PORT = 8189;
+    private static Logger logger = Logger.getLogger("ServerApp");
 
     public static void main(String[] args) {
         int port = DEFAULT_PORT;
@@ -17,8 +20,7 @@ public class ServerApp {
         try {
             new MyServer(port).start();
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Ошибка!");
+            logger.log(Level.SEVERE, e.getStackTrace().toString());
             System.exit(1);
         }
     }

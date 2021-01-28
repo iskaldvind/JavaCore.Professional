@@ -11,9 +11,12 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MyServer {
 
@@ -22,6 +25,7 @@ public class MyServer {
     private final DBHandler dbHandler;
     private final ExecutorService executorService;
     private final List<ClientHandler> clients = new ArrayList<>();
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     public MyServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
@@ -36,15 +40,13 @@ public class MyServer {
 
 
     public void start() throws IOException {
-        System.out.println("Сервер запущен!");
-
+        logger.log(Level.INFO, "Сервер запущен!");
         try {
             while (true) {
                 waitAndProcessNewClientConnection();
             }
         } catch (IOException e) {
-            System.out.println("Ошибка создания нового подключения");
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Ошибка создания нового подключения\n" + Arrays.toString(e.getStackTrace()));
         } finally {
             serverSocket.close();
             executorService.shutdown();
@@ -73,9 +75,9 @@ public class MyServer {
     }
 
     private void waitAndProcessNewClientConnection() throws IOException {
-        System.out.println("Ожидание пользователя...");
+        logger.log(Level.INFO, "Ожидание пользователя...");
         Socket clientSocket = serverSocket.accept();
-        System.out.println("Клиент подключился!");
+        logger.log(Level.INFO, "Клиент подключился!");
         processClientConnection(clientSocket);
     }
 
